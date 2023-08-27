@@ -21,16 +21,12 @@ const passwordValidation = joi
       "Your password must be at least 8 characters and contain uppercase and lowercase letters, numbers, and a special character.",
   });
 
-const signInUserSchema = emailReqSchema.keys({
+const signInAdminSchema = emailReqSchema.keys({
   password: passwordValidation,
-});
-
-const signUpUserSchema = signInUserSchema.keys({
-  name: joi.string().required(),
 });
 
 const resetPassSchema = tokenReqSchema.keys({
   newPass: passwordValidation,
 });
 
-export { signUpUserSchema, signInUserSchema, emailReqSchema, resetPassSchema };
+export { signInAdminSchema, emailReqSchema, resetPassSchema };

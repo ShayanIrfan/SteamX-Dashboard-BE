@@ -4,7 +4,7 @@ import helmet from "helmet";
 import sgMail from "@sendgrid/mail";
 
 // Router imports
-import UserRouter from "./routes/user.routes.js";
+import AdminRouter from "./routes/admin.routes.js";
 
 /**
  * Init express
@@ -56,7 +56,7 @@ app.set("sgMail", sgMail);
 /**
  * Registering base API routes
  */
-app.use("/api/v1/user", UserRouter);
+app.use("/api/v1/admin", AdminRouter);
 
 /**
  * Entry route

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: {
     type: String,
@@ -11,7 +11,6 @@ const userSchema = new mongoose.Schema({
   },
   password: { type: String, required: true },
   balance: { type: Number, default: 0 },
-  isAdmin: { type: Boolean, required: true, default: false },
 });
 
-export const User = mongoose.model("User", userSchema);
+export const Admin = mongoose.model("Admin", adminSchema);

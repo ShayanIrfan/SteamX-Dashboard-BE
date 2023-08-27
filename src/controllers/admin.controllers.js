@@ -1,10 +1,10 @@
 // MongoDb Models
-import { User } from "../models/User.js";
+import { Admin } from "../models/Admin.js";
 // import { Token } from "../../models/Token.js";
 
 // utils
 import { generateController } from "../utils/generateController.js";
-import { generateAccessToken, generateAdminAccessToken } from "../utils/generateAccessToken.js";
+import { generateAdminAccessToken } from "../utils/generateAccessToken.js";
 
 //
 // import { ObjectId } from "mongodb";
@@ -14,17 +14,17 @@ import jwt from "jsonwebtoken";
 const signIn = generateController(async (request, response, raiseException) => {
   const { email, password } = request.body;
 
-  const user = await User.findOne({ email }).exec();
+  const admin = await Admin.findOne({ email }).exec();
 
-  if (!user) {
-    return raiseException(404, "User with this email doesn't exist");
+  if (!admin) {
+    return raiseException(404, "Admin with this email doesn't exist");
   }
 
   // if (!user.verified) {
   //   return raiseException(403, "Please verify your account first");
   // }
 
-  bcrypt.compare(password, user.password, async (err, result) => {
+  bcrypt.compare(password, admin.password, async (err, result) => {
     if (err) {
       throw new Error("Auth failed");
     }
@@ -33,17 +33,11 @@ const signIn = generateController(async (request, response, raiseException) => {
       return raiseException(403, "Invalid Password");
     }
 
-    const token = user.isAdmin
-      ? generateAdminAccessToken({
-          userId: user._id,
-          email: user.email,
-          password: user.password,
-        })
-      : generateAccessToken({
-          userId: user._id,
-          email: user.email,
-          password: user.password,
-        });
+    const token = generateAdminAccessToken({
+      userId: admin._id,
+      email: admin.email,
+      password: admin.password,
+    });
 
     // const isToken = await Token.create({ user: user._id, token });
 
@@ -52,8 +46,8 @@ const signIn = generateController(async (request, response, raiseException) => {
     // }
 
     response.status(200).json({
-      message: "User successfully signed in",
-      payload: { user, token },
+      message: "Admin successfully signed in",
+      payload: { data: admin, token },
       success: true,
     });
   });
@@ -95,47 +89,6 @@ const signIn = generateController(async (request, response, raiseException) => {
 //   }
 // );
 
-const signUp = generateController(async (request, response, raiseException) => {
-  const { name, email, password } = request.body;
-
-  const result = await User.findOne({ email }).exec();
-
-  if (result) {
-    return raiseException(405, "Mail already exists");
-  }
-
-  bcrypt.hash(password, 10, async (err, hash) => {
-    if (err) {
-      return raiseException(500, err || "An error occurred while signing up");
-    }
-
-    try {
-      const user = await User.create({
-        name,
-        email,
-        password: hash,
-      });
-
-      const token = generateAccessToken({
-        userId: user._id,
-        email: user.email,
-        password: user.password
-      });
-
-      response.status(201).json({
-        message: "User successfully signed up",
-        payload: { user, token },
-        success: true,
-      });
-    } catch (err) {
-      return raiseException(
-        500,
-        err.message || "An error occurred while signing up"
-      );
-    }
-  });
-});
-
 // const signOut = generateController(async (request, _, raiseException) => {
 //   const { token } = request.body;
 
@@ -153,9 +106,9 @@ const signUp = generateController(async (request, response, raiseException) => {
 const forgetPass = generateController(async (request, _, raiseException) => {
   const { email } = request.body;
 
-  const user = await User.findOne({ email }).exec();
-  if (!user) {
-    return raiseException(404, "User with this email doesn't exist");
+  const admin = await Admin.findOne({ email: "admin@admin.com" }).exec();
+  if (!admin) {
+    return raiseException(404, "Admin not found");
   }
 
   // if (!user.verified) {
@@ -163,7 +116,7 @@ const forgetPass = generateController(async (request, _, raiseException) => {
   // }
 
   const resetPassToken = jwt.sign(
-    { userId: user._id },
+    { userId: admin._id },
     process.env.RESET_PASS_TOKEN_SECRET,
     { expiresIn: "20m" }
   );
@@ -200,12 +153,12 @@ const resetPass = generateController(
       return raiseException(404, "Token not found");
     }
 
-    jwt.verify(token, process.env.RESET_PASS_TOKEN_SECRET, (error, user) => {
+    jwt.verify(token, process.env.RESET_PASS_TOKEN_SECRET, (error, admin) => {
       if (error) {
         return raiseException(500, error || "Auth failed");
       }
 
-      const { userId } = user;
+      const { userId } = admin;
 
       bcrypt.hash(newPass, 10, async (err, hash) => {
         if (err) {
@@ -216,7 +169,7 @@ const resetPass = generateController(
         }
 
         try {
-          const updateResult = await User.updateOne(
+          const updateResult = await Admin.updateOne(
             { _id: userId },
             { $set: { password: hash } }
           ).exec();
@@ -243,7 +196,6 @@ const resetPass = generateController(
 export {
   signIn,
   // signInWithAuth,
-  signUp,
   // signOut,
   forgetPass,
   resetPass,
